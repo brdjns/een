@@ -65,7 +65,11 @@
 static size_t ltests = 0;
 static size_t lfails = 0;
 
-/* Display the test results. */
+/* Display the test results.
+ * Since C90 lacks the %zu format specifier for printf(), we need to
+ * cast the rest results to an unsigned long before displaying
+ * them. */
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
 #define lresults() do {\
     if (lfails == 0) {\
         printf("ALL TESTS PASSED (%zu/%zu)\n", ltests, ltests);\
@@ -73,10 +77,22 @@ static size_t lfails = 0;
         printf("SOME TESTS FAILED (%zu/%zu)\n", ltests-lfails, ltests);\
     }\
 } while (0)
+#else
+#define lresults() do {\
+    if (lfails == 0) {\
+        printf("ALL TESTS PASSED (%lu/%lu)\n",\
+		 (unsigned long)ltests, (unsigned long)ltests);\
+    } else {\
+      printf("SOME TESTS FAILED (%lu/%lu)\n",\
+	     (unsigned long)ltests-lfails, (unsigned long)ltests);\
+    }\
+} while (0)
+#endif
 
 /* Run a test. Name can be any string to print out; test is the
-   function name to call. */
-#define lrun(name, test) do {\
+ * function name to call. */
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
+#define lrun(name, test) do {			\
     const size_t ts = ltests;\
     const size_t fs = lfails;\
     const clock_t start = clock();\
@@ -86,6 +102,18 @@ static size_t lfails = 0;
             (ltests-ts)-(lfails-fs), lfails-fs,\
             (long)((clock() - start) * 1000 / CLOCKS_PER_SEC));\
 } while (0)
+#else
+#define lrun(name, test) do {\
+    const size_t ts = ltests;\
+    const size_t fs = lfails;\
+    const clock_t start = clock();\
+    printf("\t%s:\n", name);\
+    test();\
+    printf("\t -- pass: %-20lu fail: %-20lu time: %ldms\n",\
+	   (unsigned long)((ltests-ts)-(lfails-fs)), (unsigned long)lfails-fs,\
+	   (long)((clock() - start) * 1000 / CLOCKS_PER_SEC));\
+} while (0)
+#endif
 
 /* Assert a true statement. */
 #define lok(test) do {\
@@ -110,7 +138,8 @@ static size_t lfails = 0;
 /* Assert two floats are equal (within LTEST_FLOAT_TOLERANCE). */
 #define lfequal(a, b)\
     lequal_base(fabs((double)(a)-(double)(b)) <= LTEST_FLOAT_TOLERANCE\
-     && fabs((double)(a)-(double)(b)) == fabs((double)(a)-(double)(b)), (double)(a), (double)(b), "%f")
+     && fabs((double)(a)-(double)(b)) == fabs((double)(a)-(double)(b)),\
+		(double)(a), (double)(b), "%f")
 
 /* Assert two strings are equal. */
 #define lsequal(a, b)\
