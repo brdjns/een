@@ -3,7 +3,7 @@
 een is a very minimal unit-testing "framework" written in C and
 implemented in a single header file. It's handy when you want some
 real simple unit tests for a small project.  een is derived from
-[Minctest](https://github.com/codeplea/minctest]).
+[Minctest](https://github.com/codeplea/minctest).
 
 een implements assertion and equality functions. It tracks and times
 how many tests pass and fail. Failed tests also display which line the
